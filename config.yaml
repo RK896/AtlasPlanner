@@ -1,0 +1,7 @@
+model:
+  - name: Claude-sonnet-4-5
+    provider: anthropic
+    model: claude0sonnet-4-5
+    apiKey: ${{ ANTHROPIC_API_KEY }}
+    temperature: 0.6
+
