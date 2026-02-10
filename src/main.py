@@ -9,5 +9,8 @@ initial_state = {
 # invoke graph
 result = app.invoke(initial_state)
 
-print("---- Agent Response ----")
-print(result["messages"][-1].content)
+print("\n==== MASTER AGENT ====")
+print(result["messages"][1].content)
+
+print("\n==== RESEARCH AGENT ====")
+print(result["messages"][2].content)
