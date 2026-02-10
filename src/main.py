@@ -1,16 +1,49 @@
 from src.graph.workflow import app
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
-#create initial state with a user message
-initial_state = {
-    "messages": [HumanMessage(content="HELLO! Can you help me plan a trip?")]
-}
+def print_separator():
+    print("\n" + "="*80 + "\n")
 
-# invoke graph
-result = app.invoke(initial_state)
+def main():
+    print("🗺️  AtlasPlanner - Multi-Agent Travel Planner")
+    print("="*80)
+    print("Chat with our travel planning agents!")
+    print("Type 'quit' or 'exit' to end the conversation")
+    print_separator()
 
-print("\n==== MASTER AGENT ====")
-print(result["messages"][1].content)
+    # Track conversation state
+    state = {"messages": []}
 
-print("\n==== RESEARCH AGENT ====")
-print(result["messages"][2].content)
+    while True:
+        # Get user input
+        user_input = input("You: ").strip()
+
+        if user_input.lower() in ['quit', 'exit', 'q']:
+            print("\n👋 Thanks for using AtlasPlanner! Safe travels!")
+            break
+
+        if not user_input:
+            continue
+
+        # Add user message to state
+        state["messages"].append(HumanMessage(content=user_input))
+
+        # Invoke the graph
+        result = app.invoke(state)
+
+        # Update state with result
+        state = result
+
+        # Display responses
+        print_separator()
+
+        # Find and display all AI responses after the user's message
+        for msg in state["messages"][-10:]:  # Look at recent messages
+            if isinstance(msg, AIMessage) and msg.content:
+                print(f"🤖 Agent: {msg.content}")
+                print()
+
+        print_separator()
+
+if __name__ == "__main__":
+    main()

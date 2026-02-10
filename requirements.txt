@@ -1,4 +1,5 @@
 langchain-anthropic
 python-dotenv
 langgraph
-pyYAML
+PyYAML
+fastmcp

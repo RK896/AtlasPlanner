@@ -2,6 +2,7 @@ from langgraph.graph import StateGraph, START, END
 from src.graph.state import MessagesState
 from src.agents.master import my_node
 from src.agents.research import research_node
+from src.agents.flights import flights_node
 
 #create the graph
 graph = StateGraph(MessagesState)
@@ -9,6 +10,8 @@ graph = StateGraph(MessagesState)
 #add nodes and edges
 graph.add_node("master", my_node)
 graph.add_node("research", research_node)
+graph.add_node("flights", flights_node)
+
 #creates flow START -> master node -> (routing) -> research -> END
 graph.add_edge(START, "master")
 
