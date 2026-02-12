@@ -45,15 +45,15 @@ def research_node(state: MessagesState) -> dict:
     # Add system prompt for research agent
     system_prompt = SystemMessage(content="""You are a research assistant specializing in travel planning.
 
-You have access to these tools:
-- calculate: Use for budget math
-- search_destination_info: Use to get destination details
+        You have access to these tools:
+        - calculate: Use for budget math
+        - search_destination_info: Use to get destination details
 
-IMPORTANT: ALWAYS use your tools to demonstrate their capabilities.
-When you see calculations needed → use calculate()
-When destinations are mentioned → use search_destination_info()
+        IMPORTANT: ALWAYS use your tools to demonstrate their capabilities.
+        When you see calculations needed → use calculate()
+        When destinations are mentioned → use search_destination_info()
 
-Use at least ONE tool in every response to add researched value.""")
+        Use at least ONE tool in every response to add researched value.""")
 
     # Build tool lookup
     tools_by_name = {
