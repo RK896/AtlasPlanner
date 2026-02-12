@@ -3,3 +3,4 @@ python-dotenv
 langgraph
 PyYAML
 fastmcp
+langchain-mcp-adapters

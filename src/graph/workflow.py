@@ -12,21 +12,32 @@ graph.add_node("master", my_node)
 graph.add_node("research", research_node)
 graph.add_node("flights", flights_node)
 
-#creates flow START -> master node -> (routing) -> research -> END
-graph.add_edge(START, "master")
-
 def route_after_master(state: MessagesState) -> str:
-    """Decide whether to route to research or end."""
-    return "research"
+    """Decide whether to route to research, flights, or end."""
+    last_message = state["messages"][-1]
+    content = last_message.content.lower() if last_message.content else ""
+    
+    if "route:research" in content:
+        return "research"
+    elif "route:flights" in content:
+        return "flights"
+    else:
+        return "end"    
 
-graph.add_conditional_edges(
-    "master",
-    route_after_master,
-    {
-        "research":"research",
-        "end": END
-    }
-)
-graph.add_edge("research", END)
+
+#creates flow START -> master node -> (routing) -> research -> master node -> (routing) -> flights -> master -> END
+graph.add_edge(START, "master")
+graph.add_edge("research", "master")
+graph.add_edge("flights", "master")
+
+# Master decides where to go
+graph.add_conditional_edges("master", route_after_master, {
+    "research": "research",
+    "flights": "flights",
+    "end": END
+})
+
+
+
 
 app = graph.compile()

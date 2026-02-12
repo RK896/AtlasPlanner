@@ -49,10 +49,10 @@ def search_oneway(origin: str, destination: str, date: str) -> str:
     response=requests.get(url, headers=headers, params=querystring)
     return f"Flights available: {response.json()}"
     
-@tool  
-def get_booking_results(booking_id: str) -> str:
-    """Get details for a specific booking."""
-    # Call flights/get-booking-results endpoint
+# @tool  
+# def get_booking_results(booking_id: str) -> str:
+#     """Get details for a specific booking."""
+#     # Call flights/get-booking-results endpoint
 
 
 
@@ -73,7 +73,7 @@ def flights_node(state:MessagesState) -> dict:
                                   """)
     tools_by_name = {
         "search_roundtrip":search_roundtrip,
-        "search_one_way": search_oneway
+        "search_oneway": search_oneway
     }
 
     messages = [system_prompt] + state["messages"]
