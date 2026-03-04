@@ -18,6 +18,7 @@ def my_node(state: MessagesState) -> dict:
                                         - Research Agent, if the user needs to research destinations, include route:research in your response
                                     - If the conversation is just casual chat, don't include any ROUTE tag
                                     - Always include the ROUTE tag at the END of your response on its own line.
+                                    - Only choose one agent at a time
                                   """)
     #read from state
 

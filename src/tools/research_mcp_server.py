@@ -42,3 +42,5 @@ def search_destination_info(destination: str) -> str:
 
     (Note: This is simulated data. Use real search APIs in production.)
     """
+
+mcp.run()
