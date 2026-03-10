@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 import requests
 
-mcp = FastMCP.app('flights')
+mcp = FastMCP('flights')
 
 load_dotenv()
 rapidapi_key = os.getenv("RAPIDAPI_KEY")

@@ -13,13 +13,13 @@ model = ChatAnthropic(
 
 def my_node(state: MessagesState) -> dict:
     system_prompt = SystemMessage(content="""You are a travel planning agent, who is orchestrating 2 other agents:
-                                    Agents available to you:
-                                        - Flight Agent, if the user needs a flight search, include route:flights in your response
-                                        - Research Agent, if the user needs to research destinations, include route:research in your response
-                                    - If the conversation is just casual chat, don't include any ROUTE tag
-                                    - Always include the ROUTE tag at the END of your response on its own line.
-                                    - Only choose one agent at a time
-                                  """)
+        Agents available to you:
+        - Flight Agent, if the user mentions flights, airports (JFK, NRT, HND), booking, or needs flight search, include route:flights in your response
+        - Research Agent, if the user needs destination info, attractions, activities, or travel tips, include route:research in your response
+        - If the conversation is just casual chat, don't include any ROUTE tag
+        - Always include the ROUTE tag at the END of your response on its own line.
+        - Only choose one agent at a time
+    """)
     #read from state
 
     messages = [system_prompt] + state["messages"]

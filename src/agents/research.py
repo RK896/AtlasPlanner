@@ -28,44 +28,44 @@ async def research_node(state: MessagesState) -> dict:
 
         Use at least ONE tool in every response to add researched value.""")
 
-    async with MultiServerMCPClient({
+    client = MultiServerMCPClient({
         "research": {
             "command": "python",
             "args": ["-m", "src.tools.research_mcp_server"],
             "transport": "stdio"
-        }}) as client:
-        
-        tools =client.get_tools()
-        model = base_model.bind_tools(tools)
-        tools_by_name = {t.name: t for t in tools}
+        }})
+    
+    tools = await client.get_tools()
+    model = base_model.bind_tools(tools)
+    tools_by_name = {t.name: t for t in tools}
 
-        # Prepend system message to conversation
-        messages = [system_prompt] + state["messages"]
+    # Prepend system message to conversation
+    messages = [system_prompt] + state["messages"]
 
-        # Call LLM
-        response = await model.ainvoke(messages)
+    # Call LLM
+    response = await model.ainvoke(messages)
 
-        # If the response includes tool calls, execute them
-        if hasattr(response, 'tool_calls') and response.tool_calls:
-            # Execute each tool call
-            tool_messages = []
-            for tool_call in response.tool_calls:
-                tool_name = tool_call["name"]
-                tool_args = tool_call["args"]
+    # If the response includes tool calls, execute them
+    if hasattr(response, 'tool_calls') and response.tool_calls:
+        # Execute each tool call
+        tool_messages = []
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
 
-                # Execute the tool
-                tool_func = tools_by_name[tool_name]
-                result = await tool_func.ainvoke(tool_args)
+            # Execute the tool
+            tool_func = tools_by_name[tool_name]
+            result = await tool_func.ainvoke(tool_args)
 
-                # Create tool message with result
-                tool_messages.append(
-                    ToolMessage(content=str(result), tool_call_id=tool_call["id"])
-                )
+            # Create tool message with result
+            tool_messages.append(
+                ToolMessage(content=str(result), tool_call_id=tool_call["id"])
+            )
 
-            # Call LLM again with tool results to get final answer
-            messages_with_tools = messages + [response] + tool_messages
-            final_response = await model.ainvoke(messages_with_tools)
-            return {"messages": [response] + tool_messages + [final_response]}
+        # Call LLM again with tool results to get final answer
+        messages_with_tools = messages + [response] + tool_messages
+        final_response = await model.ainvoke(messages_with_tools)
+        return {"messages": [response] + tool_messages + [final_response]}
 
-        # No tools called - return the response as is
-        return {"messages": [response]}
+    # No tools called - return the response as is
+    return {"messages": [response]}
