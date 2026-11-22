@@ -3,14 +3,17 @@ import os
 from pathlib import Path
 import yaml
 
+# Project root is two levels up from this file (src/utils/config.py)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+ENV_PATH = PROJECT_ROOT / ".env"
+
 # Load environment variables from .env
-load_dotenv()
+load_dotenv(ENV_PATH)
 
 # Get API key from environment
 api_key = os.getenv("ANTHROPIC_API_KEY")
 
-# Build path to config.yaml (at project root, two levels up from this file)
-config_path = Path(__file__).parent.parent.parent / "config.yaml"
+config_path = PROJECT_ROOT / "config.yaml"
 
 # Load YAML configuration
 with open(config_path) as f:

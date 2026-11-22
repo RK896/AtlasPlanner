@@ -1,54 +1,41 @@
-from fastmcp import FastMCP
+"""MCP server exposing flight search tools to the Flights agent."""
 from dotenv import load_dotenv
-import os
-import requests
+from fastmcp import FastMCP
 
-mcp = FastMCP('flights')
+from src.tools.mcp_helpers import friendly_errors
+from src.tools.services import flights
+from src.utils.config import ENV_PATH
 
-load_dotenv()
-rapidapi_key = os.getenv("RAPIDAPI_KEY")
-rapidapi_host = os.getenv("RAPIDAPI_HOST")
-headers = {
-    "x-rapidapi-key": rapidapi_key,
-    "x-rapidapi-host": rapidapi_host
-}
+load_dotenv(ENV_PATH)
+mcp = FastMCP("flights")
 
-#tools for flights agent
-@mcp.tool
-def search_roundtrip(origin: str, destination:str, departure_date:str, return_date:str) -> str:
-    """
-    Search for roundtrip flights from origin to destination with given departure and return date.
-    """
-
-    url = "https://google-flights4.p.rapidapi.com/flights/search-roundtrip"
-
-    querystring = {
-        "departureId": origin,
-        "arrivalId": destination,
-        "departureDate": departure_date,
-        "returnDate": return_date
-    }
-
-
-    response = requests.get(url, headers=headers, params=querystring)
-    return f"Flights available: {response.json()}"
 
 @mcp.tool
-def search_oneway(origin: str, destination: str, date: str) -> str:
-    """Search for one-way flights."""
-    url = "https://google-flights4.p.rapidapi.com/flights/search-one-way"
-    querystring =  {
-        "departureId": origin,
-        "arrivalId": destination,
-        "departureDate": date
-    }
-    # Call flights/search-one-way endpoint
-    response=requests.get(url, headers=headers, params=querystring)
-    return f"Flights available: {response.json()}"
-    
-# @tool  
-# def get_booking_results(booking_id: str) -> str:
-#     """Get details for a specific booking."""
-#     # Call flights/get-booking-results endpoint
+@friendly_errors
+def search_roundtrip(origin: str, destination: str, departure_date: str, return_date: str) -> str:
+    """Search round-trip flights and return the cheapest options.
 
-mcp.run()
+    Args:
+        origin: 3-letter IATA airport code, e.g. "JFK"
+        destination: 3-letter IATA airport code, e.g. "LIS"
+        departure_date: outbound date, YYYY-MM-DD
+        return_date: return date, YYYY-MM-DD
+    """
+    return flights.search_roundtrip(origin, destination, departure_date, return_date)
+
+
+@mcp.tool
+@friendly_errors
+def search_oneway(origin: str, destination: str, departure_date: str) -> str:
+    """Search one-way flights and return the cheapest options.
+
+    Args:
+        origin: 3-letter IATA airport code, e.g. "JFK"
+        destination: 3-letter IATA airport code, e.g. "LIS"
+        departure_date: date, YYYY-MM-DD
+    """
+    return flights.search_oneway(origin, destination, departure_date)
+
+
+if __name__ == "__main__":
+    mcp.run(show_banner=False)
