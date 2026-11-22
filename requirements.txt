@@ -1,6 +1,14 @@
 langchain-anthropic
-python-dotenv
-langgraph
-PyYAML
-fastmcp
 langchain-mcp-adapters
+langgraph
+langgraph-checkpoint-sqlite
+fastmcp
+python-dotenv
+PyYAML
+requests
+rich
+
+# dev / test
+pytest
+pytest-asyncio
+pytest-cov
