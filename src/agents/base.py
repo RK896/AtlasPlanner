@@ -23,7 +23,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 
 from src.agents.messages import to_llm_messages
 from src.utils.config import PROJECT_ROOT
-from src.utils.llm import build_chat_model
+from src.utils.llm import build_chat_model, describe_api_error
 
 logger = logging.getLogger("atlas.agents")
 
@@ -73,7 +73,8 @@ async def run_specialist(spec: SpecialistSpec, state: dict, model=None,
                                  today or date.today())
     except (ToolLoadError, anthropic.APIError) as error:
         logger.error("%s agent failed: %s", spec.name, error)
-        report = f"The {spec.name} agent could not complete its task ({error}). Do not invent its results."
+        reason = describe_api_error(error) if isinstance(error, anthropic.APIError) else str(error)
+        report = f"The {spec.name} agent could not complete its task: {reason} Do not invent its results."
 
     return {
         "messages": [AIMessage(content=report, name=spec.name)],

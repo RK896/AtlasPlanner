@@ -1,43 +1,49 @@
-from langgraph.graph import StateGraph, START, END
-from src.graph.state import MessagesState
-from src.agents.master import my_node
-from src.agents.research import research_node
+"""The AtlasPlanner graph: a supervisor routing between four specialists.
+
+    START → router ─┬─→ research   ─┐
+                    ├─→ flights    ─┤
+                    ├─→ hotels     ─┼─→ router (again, until it picks respond)
+                    ├─→ activities ─┘
+                    └─→ respond → END
+"""
+from langgraph.graph import END, START, StateGraph
+
+from src.agents.activities import activities_node
 from src.agents.flights import flights_node
+from src.agents.hotels import hotels_node
+from src.agents.master import RESPOND, respond_node, route_from_router, router_node
+from src.agents.research import research_node
+from src.graph.state import TravelState
 
-#create the graph
-graph = StateGraph(MessagesState)
-
-#add nodes and edges
-graph.add_node("master", my_node)
-graph.add_node("research", research_node)
-graph.add_node("flights", flights_node)
-
-def route_after_master(state: MessagesState) -> str:
-    """Decide whether to route to research, flights, or end."""
-    last_message = state["messages"][-1]
-    content = last_message.content.lower() if last_message.content else ""
-    
-    if "route:research" in content:
-        return "research"
-    elif "route:flights" in content:
-        return "flights"
-    else:
-        return "end"    
+SPECIALIST_NODES = {
+    "research": research_node,
+    "flights": flights_node,
+    "hotels": hotels_node,
+    "activities": activities_node,
+}
 
 
-#creates flow START -> master node -> (routing) -> research -> master node -> (routing) -> flights -> master -> END
-graph.add_edge(START, "master")
-graph.add_edge("research", "master")
-graph.add_edge("flights", "master")
+def build_graph() -> StateGraph:
+    graph = StateGraph(TravelState)
+    graph.add_node("router", router_node)
+    graph.add_node(RESPOND, respond_node)
+    for name, node in SPECIALIST_NODES.items():
+        graph.add_node(name, node)
+        graph.add_edge(name, "router")  # every specialist reports back to the planner
 
-# Master decides where to go
-graph.add_conditional_edges("master", route_after_master, {
-    "research": "research",
-    "flights": "flights",
-    "end": END
-})
+    graph.add_edge(START, "router")
+    graph.add_conditional_edges(
+        "router",
+        route_from_router,
+        {**{name: name for name in SPECIALIST_NODES}, RESPOND: RESPOND},
+    )
+    graph.add_edge(RESPOND, END)
+    return graph
 
 
+def compile_app(checkpointer=None):
+    """Compile the graph; pass a checkpointer to remember conversations by thread_id."""
+    return build_graph().compile(checkpointer=checkpointer)
 
 
-app = graph.compile()
+app = compile_app()
