@@ -72,7 +72,7 @@ async def run_specialist(spec: SpecialistSpec, state: dict, model=None,
         report = await _research(spec, state, model or build_chat_model(), available_tools,
                                  today or date.today())
     except (ToolLoadError, anthropic.APIError) as error:
-        logger.error("%s agent failed: %s", spec.name, error)
+        logger.info("%s agent failed: %s", spec.name, error)
         reason = describe_api_error(error) if isinstance(error, anthropic.APIError) else str(error)
         report = f"The {spec.name} agent could not complete its task: {reason} Do not invent its results."
 

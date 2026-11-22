@@ -1,11 +1,14 @@
 import logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
-handler = logging.StreamHandler()
-handler.setLevel(logging.INFO)
+from rich.logging import RichHandler
 
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
 
-logger.addHandler(handler)
+def configure_logging(verbose: bool = False) -> None:
+    """Send AtlasPlanner logs to the console; INFO with --verbose, else warnings only."""
+    level = logging.INFO if verbose else logging.WARNING
+    logging.basicConfig(
+        level=logging.WARNING,
+        format="%(message)s",
+        handlers=[RichHandler(show_path=False, markup=False)],
+    )
+    logging.getLogger("atlas").setLevel(level)

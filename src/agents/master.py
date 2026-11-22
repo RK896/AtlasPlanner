@@ -83,7 +83,7 @@ async def router_node(state: dict, model=None, today: date | None = None) -> dic
     try:
         decision = await router.ainvoke(messages)
     except (anthropic.APIError, OutputParserException, ValidationError) as error:
-        logger.error("Router failed, answering directly: %s", error)
+        logger.info("Router failed, answering directly: %s", error)
         return {"next_agent": RESPOND, "task": ""}
 
     next_agent = decision.next_agent
@@ -98,7 +98,7 @@ async def respond_node(state: dict, model=None, today: date | None = None) -> di
         response = await (model or build_chat_model()).ainvoke(messages)
         reply = response.text
     except anthropic.APIError as error:
-        logger.error("Respond step failed: %s", error)
+        logger.info("Respond step failed: %s", error)
         reply = f"Sorry, I couldn't finish planning: {describe_api_error(error)}"
     return {"messages": [AIMessage(content=reply, name=MASTER_NAME)]}
 
