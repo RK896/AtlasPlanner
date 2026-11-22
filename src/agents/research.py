@@ -1,71 +1,25 @@
-from langgraph.graph import MessagesState
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import SystemMessage, ToolMessage
-from src.utils.config import API_KEY, MODEL_CONFIG
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from datetime import date
+
+from src.agents.base import SpecialistSpec, run_specialist
 
 
-# Create model with tools bound
-base_model = ChatAnthropic(
-    api_key = API_KEY,
-    model = MODEL_CONFIG["model"],
-    temperature=MODEL_CONFIG["temperature"],
-    max_tokens=MODEL_CONFIG["max_tokens"]
-)
+def _prompt(today: date) -> str:
+    return f"""You are the Research agent on a travel-planning team. Today is {today.isoformat()}.
+
+Your job: give the trip planner accurate background on the destination.
+Tools: destination_overview, weather_for_trip, convert_currency, calculate.
+
+- Always ground facts in tool results; never make up prices or facts.
+- Check weather when the user has given (or implied) dates.
+- Do currency/budget math with the tools, not in your head.
+- If key info is missing (destination, dates), say exactly what is missing.
+
+Reply with a concise report for the planner (bullets, under ~250 words):
+key facts, weather, money tips, safety notes, and anything surprising."""
 
 
-async def research_node(state: MessagesState) -> dict:
-    # Add system prompt for research agent
-    system_prompt = SystemMessage(content="""You are a research assistant specializing in travel planning.
+RESEARCH = SpecialistSpec(name="research", server_module="src.tools.research_mcp_server", build_prompt=_prompt)
 
-        You have access to these tools:
-        - calculate: Use for budget math
-        - search_destination_info: Use to get destination details
 
-        IMPORTANT: ALWAYS use your tools to demonstrate their capabilities.
-        When you see calculations needed → use calculate()
-        When destinations are mentioned → use search_destination_info()
-
-        Use at least ONE tool in every response to add researched value.""")
-
-    client = MultiServerMCPClient({
-        "research": {
-            "command": "python",
-            "args": ["-m", "src.tools.research_mcp_server"],
-            "transport": "stdio"
-        }})
-    
-    tools = await client.get_tools()
-    model = base_model.bind_tools(tools)
-    tools_by_name = {t.name: t for t in tools}
-
-    # Prepend system message to conversation
-    messages = [system_prompt] + state["messages"]
-
-    # Call LLM
-    response = await model.ainvoke(messages)
-
-    # If the response includes tool calls, execute them
-    if hasattr(response, 'tool_calls') and response.tool_calls:
-        # Execute each tool call
-        tool_messages = []
-        for tool_call in response.tool_calls:
-            tool_name = tool_call["name"]
-            tool_args = tool_call["args"]
-
-            # Execute the tool
-            tool_func = tools_by_name[tool_name]
-            result = await tool_func.ainvoke(tool_args)
-
-            # Create tool message with result
-            tool_messages.append(
-                ToolMessage(content=str(result), tool_call_id=tool_call["id"])
-            )
-
-        # Call LLM again with tool results to get final answer
-        messages_with_tools = messages + [response] + tool_messages
-        final_response = await model.ainvoke(messages_with_tools)
-        return {"messages": [response] + tool_messages + [final_response]}
-
-    # No tools called - return the response as is
-    return {"messages": [response]}
+async def research_node(state: dict) -> dict:
+    return await run_specialist(RESEARCH, state)
